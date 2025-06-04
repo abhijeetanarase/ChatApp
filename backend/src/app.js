@@ -11,7 +11,7 @@ const app = express();
 
 app.use(express.json());
 const corsOptions = {
-  origin: "http://localhost:5173", // frontend URL (React/Vite)
+  origin: process.env.FRONTEND_URL, // frontend URL (React/Vite)
   credentials: true, // allows cookies / authorization headers
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
