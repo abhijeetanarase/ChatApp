@@ -8,20 +8,28 @@ import {
   clearErrors,
   handleGoogleSignIn
 } from "../../features/auth/simpleAuthSlice";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+
 
 const LoginPage = () => {
   const dispatch = useDispatch();
-  const { showPassword, email, password, errors, isSubmitting , backendError ,  successMessage } =
+  const { showPassword, email, password, errors, isSubmitting , backendError , token ,  successMessage } =
     useSelector(selectSimpleAuth);
-
-    console.log("sucess response form login component" , successMessage);
+ const navigate = useNavigate();
     
 
   const submit = (e) => {
     e.preventDefault();
-    dispatch(loginForm());
+    try {
+      dispatch(loginForm());
+    } catch (error) {
+       console.log(error);
+       
+    }
+    
+  
+
   };
 
   useEffect(() => {
@@ -30,6 +38,12 @@ const LoginPage = () => {
         dispatch(clearErrors());
       };
     }, [dispatch]);
+
+    useEffect(()=>{
+      if (token) {
+         navigate("/success")
+      }
+    },[token])
 
   
 

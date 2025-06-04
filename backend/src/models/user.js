@@ -22,9 +22,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  contacts : {
-    
+  verified : {
+    type : Boolean,
+    default : false
   }
+ 
 });
 
 const User = mongoose.model("User", userSchema);

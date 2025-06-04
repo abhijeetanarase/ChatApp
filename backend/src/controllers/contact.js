@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 const addToConatct = async (req, res, next) => {
   const requesterId = req.userId;
   const id = req.params.id;
-  
+
   try {
     const existing = await Contact.findOne({
       requester: requesterId,
@@ -29,14 +29,14 @@ const addToConatct = async (req, res, next) => {
 const getAllContacts = async (req, res, next) => {
   const id = req.userId;
   try {
-    const contacts = await Contact.find({ requester: id }).populate("recipient");
+    const contacts = await Contact.find({ requester: id }).populate(
+      "recipient"
+    );
     res.status(200).json({ data: contacts });
   } catch (error) {
     console.log(error);
   }
 };
-
-
 
 const searchUsers = async (req, res) => {
   try {
@@ -99,11 +99,14 @@ const searchUsers = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  const userId = req.userId;
+  try {
+    const user = await User.findById(userId);
+    res.status(200).json(user);
+  } catch (error) {
+    console.log("error to getting profile", error);
+  }
+};
 
-
-const getProfile = async(req ,res)=>{
- 
-}
-
-
-export { getAllContacts, addToConatct , searchUsers };
+export { getAllContacts, addToConatct, searchUsers , getProfile };

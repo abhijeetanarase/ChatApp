@@ -4,15 +4,17 @@ import { useEffect, useState } from 'react';
 import AddContactPopup from './AddContactPopup';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchContacts, useContact, setShowAddContactPopup, setCurrentChat } from '../features/contact/contactSlice';
+import { setActiveTab } from '../features/sidebar/siderBarSlice';
 import { useNavigate } from 'react-router-dom';
+import { useSiderBar } from '../features/sidebar/siderBarSlice';
 
 const Sidebar = ({ darkMode, toggleDarkMode }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {currentChat} = useSelector(useContact);
+  const {activeTab} = useSelector(useSiderBar);
   const { onlineUsers, showAddContactPopup } = useSelector(useContact);
-  const [secondarySidebarOpen, setSecondarySidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState('chats');
+  const [secondarySidebarOpen, setSecondarySidebarOpen] = useState(true);    
 
   useEffect(() => {
     dispatch(fetchContacts());
@@ -24,7 +26,7 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
       <div className={`${secondarySidebarOpen ? 'w-16' : 'w-0'} bg-gray-50 dark:bg-gray-700 border-r border-gray-200 dark:border-gray-600 flex flex-col items-center py-4 transition-all duration-200 overflow-hidden`}>
         <div className="flex flex-col items-center space-y-4 w-full">
           <button
-            onClick={() => {setActiveTab('chats') , navigate("/chat")}}
+            onClick={() => {dispatch(setActiveTab('chats')) , navigate("/chat")}}
             className={`p-3 rounded-xl transition-colors ${activeTab === 'chats' 
               ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' 
               : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
@@ -34,7 +36,7 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
           </button>
 
           <button
-            onClick={() => {setActiveTab('video') , navigate("/video")}}
+            onClick={() => {dispatch(setActiveTab('video') ), navigate("/video")}}
             className={`p-3 rounded-xl transition-colors ${activeTab === 'video' 
               ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' 
               : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
@@ -44,7 +46,7 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
           </button>
 
           <button
-            onClick={() => {setActiveTab('voice') ,  navigate("/audio")}}
+            onClick={() => {dispatch(setActiveTab('voice')) ,  navigate("/audio")}}
             className={`p-3 rounded-xl transition-colors ${activeTab === 'voice' 
               ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300' 
               : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}

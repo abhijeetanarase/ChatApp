@@ -10,6 +10,8 @@ import Layout from "./pages/Layout";
 import ChatArea from "./pages/chat/ChatArea";
 import Audio from "./pages/audio/Audio";
 import VideoCall from "./pages/video/VideoCall";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 const App = () => {
   const [currentChat, setCurrentChat] = useState({});
@@ -19,18 +21,23 @@ const App = () => {
       <Route element={<RouteGuard requireAuth={false} />}>
         <Route path="/" element={<RegistrationPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/success" element={<UserProfileSuccessPage />} />
       </Route>
 
       {/* Authenticated-only group */}
 
       <Route element={<Layout />}>
-  <Route element={<RouteGuard />}>
-    <Route path="/chat" element={<ChatArea />} />
-    <Route path="/video" element = {<VideoCall/>} />
-    <Route path="/audio" element = {<Audio/>}/>
-  </Route>
-</Route>
+        <Route element={<RouteGuard />}>
+
+          <Route path="/chat" element={<ChatArea />} />
+          <Route path="/video" element={<VideoCall />} />
+          <Route path="/audio" element={<Audio />} />
+        </Route>
+      </Route>
+
+
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

@@ -1,13 +1,20 @@
+import { use } from "react";
 import User from "../models/user.js";
 import {
   decodePassword,
   encodePassword,
   gererateToken,
   isValidEmail,
+  sendEmail,
   // isValidPassword,
 } from "../utils/userUtils.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
+import verificationsucess from "../templates/verificationsucess.js";
+import alreadyverfied from "../templates/alreadyverfied.js";
+import linkexpiration from "../templates/linkexpiration.js";
+import tokennotfound from "../templates/tokennotfound.js";
+import usernotfound from "../templates/usernotfound.js";
 
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -26,13 +33,7 @@ export const registerUser = async (req, res) => {
         .status(400)
         .json({ message: "Invalid email format", success: false });
     }
-    // if (isValidPassword(password)) {
-    //   return res.status(400).json({
-    //     message:
-    //       "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character",
-    //     success: false,
-    //   });
-    // }
+
 
     const hashedPassword = await encodePassword(password);
     const user = new User({
@@ -40,9 +41,11 @@ export const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
     });
+
     await user.save();
-    return res.status(201).json({
-      message: "User registered successfully",
+    const token = gererateToken(user, '10m');
+    res.status(201).json({
+      message: "Please check you mail for verification",
       success: true,
       user: {
         id: user._id,
@@ -50,6 +53,8 @@ export const registerUser = async (req, res) => {
         email: user.email,
       },
     });
+
+    sendEmail(user.email, token)
   } catch (error) {
     console.error("Error registering user:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -71,14 +76,23 @@ export const loginUser = async (req, res) => {
     if (!user) {
       return res
         .status(400)
-        .json({ message: "User not found", success: false });
+        .json({ message: "User not registerd", success: false });
     }
-    const isPasswordValid = await decodePassword(password, user.password);
-    if (!isPasswordValid) {
-      return res
-        .status(400)
-        .json({ message: "Invalid credentials", success: false });
+    if (!user.verified) {
+      return res.status(400).json({ message: "User not verfiled", success: false });
     }
+    if (user.password) {
+      const isPasswordValid = await decodePassword(password, user.password);
+      if (!isPasswordValid) {
+        return res
+          .status(403)
+          .json({ message: "Invalid credentials", success: false });
+      }
+    }
+    else {
+      return res.status(403).json({ message: "Please continue with google login" })
+    }
+
     const token = gererateToken(user);
     return res.status(200).json({
       message: "Login successful",
@@ -142,6 +156,7 @@ export const googleAuthCallback = async (req, res) => {
       email: payload.email,
       name: payload.name,
       picture: payload.picture,
+      verified: true
     };
 
     // Update or create user
@@ -160,8 +175,7 @@ export const googleAuthCallback = async (req, res) => {
 
     // Redirect with token
     res.redirect(
-      `${
-        process.env.FRONTEND_URL
+      `${process.env.FRONTEND_URL
       }/success?token=${jwtToken}&email=${encodeURIComponent(
         user.email
       )}&name=${encodeURIComponent(user.name)}&picture=${encodeURIComponent(
@@ -173,3 +187,50 @@ export const googleAuthCallback = async (req, res) => {
     res.status(500).send("Authentication failed");
   }
 };
+
+
+
+
+
+export const verifyEmail = async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).send(tokennotfound);
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).send(usernotfound);
+    }
+
+    if (user.verified) {
+      return res.status(400).send(alreadyverfied);
+    }
+
+    user.verified = true;
+    await user.save();
+
+    // Success HTML template
+    return res.send(verificationsucess);
+
+  } catch (error) {
+    console.error('Email verification failed:', error.message);
+
+    let errorMessage = 'Invalid or malformed verification token.';
+    if (error.name === 'TokenExpiredError') {
+      errorMessage = 'Verification link has expired. Please request a new one.';
+    }
+
+    return res.status(400).send(linkexpiration(errorMessage));
+  }
+};
+
+
+
+
+

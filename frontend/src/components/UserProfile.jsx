@@ -2,16 +2,25 @@ import { LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { logOut } from '../features/auth/simpleAuthSlice';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const UserProfile = () => {
 
   const dispath = useDispatch();
+  
   const  navigate = useNavigate()
 
   const onLogout = ()=>{
-   dispath(logOut());
+  //  dispath(logOut());
+   const token = localStorage.removeItem('authToken');
    navigate("/login")
+   
   }
+
+  
+    
+
+
 
   return (
     <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">

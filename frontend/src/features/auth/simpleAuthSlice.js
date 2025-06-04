@@ -14,7 +14,7 @@ export const submitForm = createAsyncThunk(
     }
     const { name, email, password } = state;
     try {
-      const res = await api.post(`/users/register`, { name, email, password });
+      const res = await api.post(`/user/register`, { name, email, password });
       return res.data;
     } catch (err) {
       const message = err?.response?.data?.message || "Registration failed";
@@ -81,6 +81,9 @@ const simpleAuthSlice = createSlice({
     logOut : ()=>{
       localStorage.removeItem("authToken");
     },
+    setUser : (state , action)=>{
+       state.user = action.payload;
+    }
    
   },
   extraReducers: (builder) => {
@@ -122,7 +125,7 @@ const simpleAuthSlice = createSlice({
         state.password = "";
         state.token = `Bearer ${action?.payload?.token}`;
         state.user = action.payload.user;
-        localStorage.setItem("authToken", action?.payload?.token);
+        localStorage.setItem("authToken", `Bearer ${action?.payload?.token}`);
         localStorage.setItem("userId", action?.payload?.user?.id)
       })
       .addCase(loginForm.rejected, (state, action) => {
@@ -140,7 +143,8 @@ export const {
   handleChangeUser,
   clearErrors,
   handleGoogleSignIn,
-  logOut
+  logOut,
+  setUser
 } = simpleAuthSlice.actions;
 export const selectSimpleAuth = (state) => state.simpleAuth;
 export default simpleAuthSlice.reducer;
