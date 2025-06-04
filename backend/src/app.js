@@ -4,12 +4,17 @@ import contactRouter from "./routes/contact.js"
 import messageRouter  from "./routes/message.js"
 import cors from "cors"
 import authenticate from "./middlewares/auth.js";
+import dotenv from "dotenv";
+dotenv.config(); 
+
 
 
 
 const app = express();
 
 app.use(express.json());
+
+
 const corsOptions = {
   origin: process.env.FRONTEND_URL, // frontend URL (React/Vite)
   credentials: true, // allows cookies / authorization headers
