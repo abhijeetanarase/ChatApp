@@ -28,8 +28,9 @@ const ChatArea = () => {
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
+
   useEffect(() => {
-    socketRef.current = io(baseUrl, {
+    socketRef.current = io(baseUrl.slice(0, -4), {
       auth: {
         token: localStorage.getItem("authToken"),
       },
@@ -54,6 +55,8 @@ const ChatArea = () => {
     });
   }, [newMessage]);
   console.log(currentMessage);
+  console.log(currentChat._id);
+  
 
 useEffect(() => {
   if (currentMessage) {
