@@ -10,6 +10,7 @@ import {
   setMessages,
   useChat,
 } from "../../features/chat/chatSlice";
+import { baseUrl } from "../../utils/constants";
 
 const ChatArea = () => {
   const { currentChat } = useSelector(useContact);
@@ -28,7 +29,7 @@ const ChatArea = () => {
   const socketRef = useRef(null);
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:4000", {
+    socketRef.current = io(baseUrl, {
       auth: {
         token: localStorage.getItem("authToken"),
       },
