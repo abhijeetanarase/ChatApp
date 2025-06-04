@@ -50,7 +50,7 @@ const intitSocketSever = (server) => {
 
       
       socket.on("typing" ,({toUserId , typing})=>{
-        console.log(typing);
+        console.log(typing , toUserId);
         
       })
 

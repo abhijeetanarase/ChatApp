@@ -16,6 +16,8 @@ const ChatArea = () => {
   const [newMessage, setNewMessage] = useState({});
   const { messages } = useSelector(useChat);
   const [currentMessage, setCurrentMessage] = useState("");
+  const typingTimeoutRef = useRef();
+
 
   console.log(messages);
   
@@ -52,13 +54,36 @@ const ChatArea = () => {
   }, [newMessage]);
   console.log(currentMessage);
 
-  useEffect(() => {
-    if (currentMessage) {
-      socketRef.current.emit("typing", { typing: true });
-    } else {
-      socketRef.current.emit("typing", { typing: false });
+useEffect(() => {
+  if (currentMessage) {
+    socketRef.current.emit("typing", { toUserId: currentChat._id, typing: true });
+
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
     }
-  }, [currentMessage]);
+
+    // Set new timeout to emit `typing: false` after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      socketRef.current.emit("typing", { toUserId: currentChat._id, typing: false });
+    }, 2000);
+  } else {
+    // If input is cleared, immediately emit typing: false
+    socketRef.current.emit("typing", { toUserId: currentChat._id, typing: false });
+
+    // Clear timeout if it exists
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+  }
+
+  // Clean up on unmount
+  return () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+  };
+}, [currentMessage]);
 
   useEffect(() => {
     if (!socketRef.current || !currentChat?._id) return;
