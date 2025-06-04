@@ -6,7 +6,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import UserProfileSuccessPage from "./pages/auth/UserProfileSuccessPage";
 import RouteGuard from "./RouteGuard";
 import NotFoundPage from "./pages/404/NotFoundPage";
-import Layout from "./pages/LayOut";
+import Layout from "./pages/Layout";
 import ChatArea from "./pages/chat/ChatArea";
 import Audio from "./pages/audio/Audio";
 import VideoCall from "./pages/video/VideoCall";
