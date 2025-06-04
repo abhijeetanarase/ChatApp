@@ -78,11 +78,12 @@ export const loginUser = async (req, res) => {
         .status(400)
         .json({ message: "User not registerd", success: false });
     }
-    if (!user.verified) {
-      return res.status(400).json({ message: "User not verfiled", success: false });
-    }
+   
     if (user.password) {
       const isPasswordValid = await decodePassword(password, user.password);
+      if (!user.verified) {
+      return res.status(400).json({ message: "User not verfiled", success: false });
+    }
       if (!isPasswordValid) {
         return res
           .status(403)
