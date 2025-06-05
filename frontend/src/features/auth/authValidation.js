@@ -33,4 +33,18 @@ function validate(state, type) {
   return errors;
 }
 
-export default validate;
+
+function validateEmail(state, type) {
+  const errors = {};
+  const email = state.email.trim();
+  if (!email) {
+    errors.email = "Email is required";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = "Email is invalid";
+  } else if (email.length > 40) {
+    errors.email = "Email must be at most 40 characters long";
+  }
+  return errors;
+}
+
+export   {validate , validateEmail};

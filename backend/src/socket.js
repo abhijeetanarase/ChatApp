@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import Message from "./models/message.js";
+import Contact from "./models/contact.js";
 
 
 let io;
@@ -56,12 +57,12 @@ const intitSocketSever = (server) => {
       })
 
       socket.on("private_chat",async ({ toUserId, message }) => {
-        const created =  await Message.create({
+         const created =  await Message.create({
           sender : userId,
           receiver : toUserId,
           content : message
          })
-         console.log("message is created" , created);
+       
          
         sendPrivateMessage({
           userId: toUserId,

@@ -14,7 +14,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 
 const App = () => {
-  const [currentChat, setCurrentChat] = useState({});
+
   return (
     <Routes>
       {/* Guest-only group */}
@@ -22,7 +22,7 @@ const App = () => {
         <Route path="/" element={<RegistrationPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/success" element={<UserProfileSuccessPage />} />
       </Route>
 

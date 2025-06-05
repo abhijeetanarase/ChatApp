@@ -11,6 +11,7 @@ import {
   useChat,
 } from "../../features/chat/chatSlice";
 import { baseUrl } from "../../utils/constants";
+import ChatBoard from "../auth/ChatBoard";
 
 const ChatArea = () => {
   const { currentChat } = useSelector(useContact);
@@ -165,9 +166,9 @@ useEffect(() => {
           </div>
         </>
       ) : (
-        <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
-          Select a contact to start chatting
-        </div>
+        
+          <ChatBoard/>
+      
       )}
     </div>
   );

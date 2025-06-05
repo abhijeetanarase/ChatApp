@@ -1,22 +1,29 @@
 import { Mail, ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { forgotForm, handleChangeEmail, selectSimpleAuth ,setIsSubmitted , clearErrors } from "../../features/auth/simpleAuthSlice";
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+  const {email , isSubmitting , errors , backendError , successMessage ,isSubmitted} = useSelector(selectSimpleAuth);
 
+  
+
+  
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+   dispatch(forgotForm());
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsLoading(false);
-    setIsSubmitted(true);
   };
+
+  useEffect(() => {
+    // Clear errors when component unmounts
+    return () => {
+      dispatch(clearErrors());
+    };
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -43,8 +50,27 @@ export default function ForgotPassword() {
             </p>
           </div>
 
+           {successMessage && (
+            <div className="mb-6 p-4 bg-green-50 text-green-800 rounded-lg border border-green-200 flex items-center animate-fade-in">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {successMessage}
+            </div>
+          )}
+
+          {/* Backend Error */}
+          {backendError && (
+            <div className="mb-6 p-4 bg-red-50 text-red-800 rounded-lg border border-red-200 flex items-center animate-fade-in">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              {backendError}
+            </div>
+          )}
+
           {!isSubmitted ? (
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-6" noValidate onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 text-left mb-1">
                   Email address
@@ -60,22 +86,26 @@ export default function ForgotPassword() {
                     autoComplete="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    onChange={(e) => dispatch(handleChangeEmail(e.target.value))}
+                   className={`block w-full pl-10 pr-3 py-2 border ${errors?.email ? "border-red-300" : "border-gray-300"
+                    } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
                     placeholder="you@example.com"
                   />
                 </div>
+                 {errors?.email && (
+                <p className="mt-2 text-sm text-red-600">{errors?.email}</p>
+              )}
               </div>
 
               <div>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-md font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                    isLoading ? "opacity-70 cursor-not-allowed" : ""
+                    isSubmitting ? "opacity-70 cursor-not-allowed" : ""
                   }`}
                 >
-                  {isLoading ? "Sending..." : "Send reset link"}
+                  {isSubmitting ? "Sending..." : "Send reset link"}
                 </button>
               </div>
             </form>
@@ -91,7 +121,7 @@ export default function ForgotPassword() {
               <p className="text-sm text-gray-500">
                 Didn't receive the email?{" "}
                 <button 
-                  onClick={() => setIsSubmitted(false)}
+                  onClick={() => {dispatch(setIsSubmitted(false)) ,  dispatch(clearErrors())}}
                   className="text-blue-600 hover:text-blue-800 font-medium"
                 >
                   Try again

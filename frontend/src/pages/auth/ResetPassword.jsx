@@ -11,6 +11,7 @@ export default function ResetPassword() {
   const [isSuccess, setIsSuccess] = useState(false);
   const { token } = useParams();
   const navigate = useNavigate();
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,8 +23,8 @@ export default function ResetPassword() {
 
     setIsLoading(true);
     try {
-      await api.post("/auth/reset-password", { 
-        token, 
+      await api.post("/user/reset-password", { 
+        slug : token, 
         newPassword: password 
       });
       setIsSuccess(true);

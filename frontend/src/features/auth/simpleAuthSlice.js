@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../utils/api";
-import validate from "./authValidation";
+import {validate , validateEmail} from "./authValidation";
 import { baseUrl } from "../../utils/constants";
 
 // Async action (thunk) to simulate an API call
@@ -28,14 +28,32 @@ export const loginForm = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     const state = getState().simpleAuth;
     const errors = validate(state, "login");
-    console.log(errors);
-
-    if (Object.values(errors).some((e) => e)) {
+   if (Object.values(errors).some((e) => e)) {
       return rejectWithValue({ errors: errors });
     }
     const { email, password } = state;
     try {
       const res = await api.post(`/user/login`, { email, password });
+      return res.data;
+    } catch (err) {
+      const message = err?.response?.data?.message || "Login Failed";
+      return rejectWithValue({ apiError: message });
+    }
+  }
+);
+
+
+export const forgotForm = createAsyncThunk(
+  "simpleAuth/forgotForm",
+  async (_, { getState, rejectWithValue }) => {
+    const state = getState().simpleAuth;
+    const errors = validateEmail(state);
+    if (Object.values(errors).some((e) => e)) {
+      return rejectWithValue({ errors: errors });
+    }
+    const { email } = state;
+    try {
+      const res = await api.post(`/user/forgot-password`, { email });
       return res.data;
     } catch (err) {
       const message = err?.response?.data?.message || "Login Failed";
@@ -57,6 +75,7 @@ const initialState = {
   isSubmitting: false,
   backendError: "",
   successMessage: "",
+  isSubmitted : false
 };
 
 const simpleAuthSlice = createSlice({
@@ -73,6 +92,10 @@ const simpleAuthSlice = createSlice({
     clearErrors: (state) => {
       state.backendError = "";
       state.successMessage = "";
+      state.errors = {};
+      state.email = "";
+      state.password = "";
+      state.name = ""
     },
 
     handleGoogleSignIn: () => {
@@ -83,7 +106,16 @@ const simpleAuthSlice = createSlice({
     },
     setUser : (state , action)=>{
        state.user = action.payload;
+    },
+    handleChangeEmail : (state , action)=>{
+      console.log("email change",action.payload);
+      
+       state.email = action.payload;
+    },
+    setIsSubmitted : (state ,action)=> {
+       state.isSubmitted = action.payload;
     }
+    
    
   },
   extraReducers: (builder) => {
@@ -134,6 +166,23 @@ const simpleAuthSlice = createSlice({
         console.log("action.payload", action.payload);
 
         state.backendError = action.payload.apiError;
+      })
+
+       .addCase(forgotForm.pending, (state, action) => {
+        state.isSubmitting = true;
+        state.error = null;
+      })
+      .addCase(forgotForm.fulfilled, (state, action) => {
+        state.isSubmitting = false;
+        state.errors = {};
+        // state.email = "";
+        state.successMessage = action.payload.message;
+        state.isSubmitted = true;
+        })
+      .addCase(forgotForm.rejected, (state, action) => {
+        state.isSubmitting = false;
+        state.errors = action.payload.errors
+        state.backendError = action.payload.apiError;
       });
   },
 });
@@ -144,7 +193,9 @@ export const {
   clearErrors,
   handleGoogleSignIn,
   logOut,
-  setUser
+  setUser,
+  handleChangeEmail,
+  setIsSubmitted
 } = simpleAuthSlice.actions;
 export const selectSimpleAuth = (state) => state.simpleAuth;
 export default simpleAuthSlice.reducer;

@@ -6,6 +6,7 @@ import {
   gererateToken,
   isValidEmail,
   sendEmail,
+  sendPasswordResetEmail,
   // isValidPassword,
 } from "../utils/userUtils.js";
 import axios from "axios";
@@ -43,7 +44,10 @@ export const registerUser = async (req, res) => {
     });
 
     await user.save();
-    const token = gererateToken(user, '10m');
+    const token = gererateToken(user, '10m', { purpose: "email-verification" });
+
+
+
     res.status(201).json({
       message: "Please check you mail for verification",
       success: true,
@@ -53,8 +57,10 @@ export const registerUser = async (req, res) => {
         email: user.email,
       },
     });
+    const link = `${req.protocol}://${req.get("host")}/api/user/verify-email?token=${token}`
 
-    sendEmail(user.email, token)
+
+    sendEmail(user.email, link)
   } catch (error) {
     console.error("Error registering user:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -78,12 +84,12 @@ export const loginUser = async (req, res) => {
         .status(400)
         .json({ message: "User not registerd", success: false });
     }
-   
+
     if (user.password) {
       const isPasswordValid = await decodePassword(password, user.password);
       if (!user.verified) {
-      return res.status(400).json({ message: "User not verfiled", success: false });
-    }
+        return res.status(400).json({ message: "User not verfiled", success: false });
+      }
       if (!isPasswordValid) {
         return res
           .status(403)
@@ -208,6 +214,14 @@ export const verifyEmail = async (req, res) => {
     if (!user) {
       return res.status(404).send(usernotfound);
     }
+    if (decoded.purpose == "reset-password") {
+      const date = Date.now()
+      user.slug = date;
+      await user.save();
+      return res.redirect(`${process.env.FRONTEND_URL}/reset-password/${date}`);
+
+    }
+
 
     if (user.verified) {
       return res.status(400).send(alreadyverfied);
@@ -216,8 +230,14 @@ export const verifyEmail = async (req, res) => {
     user.verified = true;
     await user.save();
 
+
     // Success HTML template
-    return res.send(verificationsucess);
+    if (decoded.purpose == "email-verification") {
+      return res.send(verificationsucess);
+    }
+
+
+
 
   } catch (error) {
     console.error('Email verification failed:', error.message);
@@ -230,6 +250,94 @@ export const verifyEmail = async (req, res) => {
     return res.status(400).send(linkexpiration(errorMessage));
   }
 };
+
+
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Email is required",
+        success: false,
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found, please register",
+        success: false,
+      });
+    }
+
+    // Generate reset token (e.g., valid for 6 minutes)
+    const token = gererateToken(user._id, "6m", { purpose: "reset-password" });
+    await user.save();
+
+    // You can email this token as a password reset link
+    // e.g., `${process.env.FRONTEND_URL}/reset-password?token=${token}`
+    const link = `${req.protocol}://${req.get("host")}/api/user/verify-email?token=${token}`
+
+    res.status(200).json({
+      message: "Reset link generated",
+      token, // usually not returned in production — send it via email
+      success: true,
+    });
+    await sendPasswordResetEmail(user.email, link)
+  } catch (error) {
+    console.error("Reset Password Error:", error);
+    return res.status(500).json({
+      message: "Server error",
+      success: false,
+    });
+  }
+};
+
+
+export const resetPassword = async (req, res) => {
+  const { slug, newPassword } = req.body;
+
+  if (!slug || !newPassword) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  try {
+    const user = await User.findOne({ slug });
+
+    if (!user) {
+      return res.status(404).json({ message: "Invalid or expired reset link." });
+    }
+
+    // Check if the slug is expired (optional but recommended)
+    const expiryLimit = 6 * 60 * 1000; // 15 minutes
+    const isExpired = Date.now() - Number(user.slug) > expiryLimit;
+
+    if (isExpired) {
+      return res.status(410).json({ message: "Reset link has expired. Please request a new one." });
+    }
+
+    // Hash the new password
+    const hashedPassword = await encodePassword(newPassword);
+    user.password = hashedPassword;
+
+    // Invalidate the slug
+    user.slug = undefined;
+
+    await user.save();
+
+    return res.status(200).json({ message: "Password has been reset successfully." });
+
+  } catch (error) {
+    console.error("❌ Password reset error:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+
+
 
 
 

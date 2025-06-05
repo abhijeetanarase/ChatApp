@@ -19,7 +19,9 @@ const addToConatct = async (req, res, next) => {
     const contact = await Contact.create({
       requester: requesterId,
       recipient: id,
+      status : "accepted"
     });
+    
     res.status(200).json(contact);
   } catch (error) {
     console.log(error);
