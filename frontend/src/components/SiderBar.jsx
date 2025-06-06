@@ -5,7 +5,7 @@ import AddContactPopup from './AddContactPopup';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchContacts, useContact, setShowAddContactPopup, setCurrentChat } from '../features/contact/contactSlice';
 import { setActiveTab } from '../features/sidebar/siderBarSlice';
-import { useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useSiderBar } from '../features/sidebar/siderBarSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,9 +17,20 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
   const { onlineUsers, showAddContactPopup } = useSelector(useContact);
   const [secondarySidebarOpen, setSecondarySidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     dispatch(fetchContacts());
+    
+    // Check if mobile on initial render and on resize
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
   const filteredUsers = onlineUsers.filter(user =>
@@ -27,12 +38,12 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
   );
 
   return (
-    <div className="flex h-full bg-white dark:bg-gray-950">
-      {/* Secondary Sidebar - Slim Navigation */}
+    <div className="flex flex-col h-full bg-white dark:bg-gray-950 md:flex-row">
+      {/* Desktop Secondary Sidebar - Slim Navigation (hidden on mobile) */}
       <motion.div 
         initial={{ width: 64 }}
         animate={{ width: secondarySidebarOpen ? 64 : 0 }}
-        className="bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col items-center py-4 overflow-hidden"
+        className="hidden md:flex bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex-col items-center py-4 overflow-hidden"
       >
         <div className="flex flex-col items-center space-y-4 w-full">
           <motion.button
@@ -94,10 +105,14 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
       </motion.div>
 
       {/* Main Sidebar - Contacts List */}
-      <motion.div
+        {
+          currentChat._id && isMobile ? (<Outlet/>) : (  <motion.div
         initial={{ width: 288 }}
-        animate={{ width: secondarySidebarOpen ? 288 : 320 }}
-        className="flex flex-col border-r border-gray-200 dark:border-gray-800"
+      
+  animate={{ 
+    width: isMobile ? '100vw' : (secondarySidebarOpen ? 288 : 320)
+  }}
+        className="flex flex-col border-r border-gray-200 dark:border-gray-800 flex-1"
       >
         {/* Header */}
         <motion.div 
@@ -149,6 +164,7 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
         </motion.div>
         
         {/* Contacts List */}
+     
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'chats' && (
             <AnimatePresence>
@@ -270,7 +286,45 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
             <AddContactPopup />
           )}
         </AnimatePresence>
-      </motion.div>
+      </motion.div>)
+       }
+    
+
+      {/* Mobile Bottom Navigation (shown only on mobile) */}
+      <div className={`md:hidden ${isMobile && currentChat._id ? "hidden" : "block"}  bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex justify-around items-center py-2`}>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => { dispatch(setActiveTab('chats')); navigate("/chat") }}
+          className={`p-3 rounded-xl transition-all ${activeTab === 'chats'
+            ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 shadow-md'
+            : 'text-gray-500 dark:text-gray-400'}`}
+          title="Chats"
+        >
+          <MessageSquare className="h-5 w-5" />
+        </motion.button>
+
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => { dispatch(setActiveTab('video')); navigate("/video") }}
+          className={`p-3 rounded-xl transition-all ${activeTab === 'video'
+            ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 shadow-md'
+            : 'text-gray-500 dark:text-gray-400'}`}
+          title="Video Calls"
+        >
+          <Video className="h-5 w-5" />
+        </motion.button>
+
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => { dispatch(setActiveTab('voice')); navigate("/audio") }}
+          className={`p-3 rounded-xl transition-all ${activeTab === 'voice'
+            ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 shadow-md'
+            : 'text-gray-500 dark:text-gray-400'}`}
+          title="Voice Calls"
+        >
+          <Phone className="h-5 w-5" />
+        </motion.button>
+      </div>
     </div>
   );
 };

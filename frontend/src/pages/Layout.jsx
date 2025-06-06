@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import ChatArea from './chat/ChatArea';
 import { Outlet } from 'react-router-dom';
 
 import Sidebar from '../components/SiderBar';
@@ -30,7 +29,7 @@ const Layout = () => {
             darkMode={darkMode}
             toggleDarkMode={toggleDarkMode}
           />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto hidden sm:block">
            <Outlet/>
           </main>
         </div>

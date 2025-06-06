@@ -146,7 +146,7 @@ useEffect(() => {
           </div>
 
           {/* Message list */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50 dark:bg-gray-800">
+          <div className="flex-1 overflow-y-auto py-4 bg-gray-50 dark:bg-gray-800">
             <div className="space-y-4">
               {messages.map((message) => (
                 <Message key={message.id} message={message} />
