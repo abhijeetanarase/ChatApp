@@ -17,11 +17,6 @@ const isValidEmail = (email) => {
 }
 
 
-// const isValidPassword = (password) => {
-//     // Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character
-//     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-//     return passwordRegex.test(password);
-// }
 const isValidName = (name) => {
     // Name must be at least 2 characters long and can only contain letters and spaces
     const nameRegex = /^[a-zA-Z\s]{2,}$/;

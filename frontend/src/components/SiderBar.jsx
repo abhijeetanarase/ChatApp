@@ -57,7 +57,7 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
           >
             <MessageSquare className="h-5 w-5" />
           </motion.button>
-
+{/* 
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -80,7 +80,7 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
             title="Voice Calls"
           >
             <Phone className="h-5 w-5" />
-          </motion.button>
+          </motion.button> */}
         </div>
 
         <div className="mt-auto">

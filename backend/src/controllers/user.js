@@ -60,7 +60,7 @@ export const registerUser = async (req, res) => {
     const link = `${req.protocol}://${req.get("host")}/api/user/verify-email?token=${token}`
 
 
-    sendEmail(user.email, link)
+    await sendEmail(user.email, link)
   } catch (error) {
     console.error("Error registering user:", error);
     return res.status(500).json({ message: "Internal server error" });

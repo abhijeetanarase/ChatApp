@@ -7,18 +7,20 @@ import { useEffect } from 'react';
 const UserProfile = () => {
 
   const dispath = useDispatch();
-  
-  const  navigate = useNavigate()
 
-  const onLogout = ()=>{
-  //  dispath(logOut());
-   const token = localStorage.removeItem('authToken');
-   navigate("/login")
-   
+  const navigate = useNavigate()
+
+  const onLogout = () => {
+    //  dispath(logOut());
+    const token = localStorage.removeItem('authToken');
+    if (!token) {
+      navigate("/login")
+    }
+
   }
 
-  
-    
+
+
 
 
 

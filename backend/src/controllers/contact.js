@@ -111,4 +111,27 @@ const getProfile = async (req, res) => {
   }
 };
 
-export { getAllContacts, addToConatct, searchUsers , getProfile };
+
+const checkAuth = async (req, res) => {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Token expired" });
+    }
+    console.log("error to getting profile", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export { getAllContacts, addToConatct, searchUsers , getProfile , checkAuth};
+
