@@ -1,4 +1,4 @@
-import { Search, Moon, Sun, Plus, MessageSquare, Video, Phone } from 'lucide-react';
+import { Search, Moon, Sun, Plus, MessageSquare, Video, Phone, MailPlus } from 'lucide-react';
 import UserProfile from './UserProfile';
 import { useEffect, useState } from 'react';
 import AddContactPopup from './AddContactPopup';
@@ -8,6 +8,9 @@ import { setActiveTab } from '../features/sidebar/siderBarSlice';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useSiderBar } from '../features/sidebar/siderBarSlice';
 import { motion, AnimatePresence } from 'framer-motion';
+import InvitationsList from "./InvitationsList";
+import IncomingCallModal from '../pages/video/IncomingCallModal';
+import { useSocket } from '../context/SocketContext';
 
 const Sidebar = ({ darkMode, toggleDarkMode }) => {
   const dispatch = useDispatch();
@@ -18,18 +21,16 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
   const [secondarySidebarOpen, setSecondarySidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const {callStatus } = useSocket()
 
   useEffect(() => {
     dispatch(fetchContacts());
-    
     // Check if mobile on initial render and on resize
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-    
     checkIfMobile();
     window.addEventListener('resize', checkIfMobile);
-    
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
@@ -40,6 +41,7 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 md:flex-row">
       {/* Desktop Secondary Sidebar - Slim Navigation (hidden on mobile) */}
+      {callStatus == 'ringing' &&  <IncomingCallModal/>}
       <motion.div 
         initial={{ width: 64 }}
         animate={{ width: secondarySidebarOpen ? 64 : 0 }}
@@ -57,7 +59,7 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
           >
             <MessageSquare className="h-5 w-5" />
           </motion.button>
-{/* 
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -80,7 +82,20 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
             title="Voice Calls"
           >
             <Phone className="h-5 w-5" />
-          </motion.button> */}
+          </motion.button>
+
+          {/* Invitation Tab */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => dispatch(setActiveTab('invitations'))}
+            className={`p-3 rounded-xl transition-all ${activeTab === 'invitations'
+              ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 shadow-md'
+              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'}`}
+            title="Invitations"
+          >
+            <MailPlus className="h-5 w-5" />
+          </motion.button>
         </div>
 
         <div className="mt-auto">
@@ -166,114 +181,120 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
         {/* Contacts List */}
      
         <div className="flex-1 overflow-y-auto">
-          {activeTab === 'chats' && (
-            <AnimatePresence>
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user, index) => (
-                  <motion.div
-                    key={user._id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={`flex items-center p-3 cursor-pointer transition-all ${
-                      currentChat._id === user._id
-                        ? 'bg-indigo-50/50 dark:bg-gray-800'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
-                    onClick={() => dispatch(setCurrentChat(user))}
-                    whileHover={{ scale: 1.01 }}
-                  >
-                    <div className="relative flex-shrink-0">
-                      <motion.img
-                        src={user?.picture || "https://i.pravatar.cc/150?img=1"}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                      />
-                      <motion.span
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-950 ${
-                          user.status === 'online'
-                            ? 'bg-green-500'
-                            : user.status === 'away'
-                            ? 'bg-yellow-500'
-                            : 'bg-gray-400'
+          {activeTab === 'invitations' ? (
+            <InvitationsList />
+          ) : (
+            <>
+              {activeTab === 'chats' && (
+                <AnimatePresence>
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user, index) => (
+                      <motion.div
+                        key={user._id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className={`flex items-center p-3 cursor-pointer transition-all ${
+                          currentChat._id === user._id
+                            ? 'bg-indigo-50/50 dark:bg-gray-800'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-800'
                         }`}
-                        animate={{
-                          scale: [1, 1.2, 1],
-                          opacity: user.status === 'online' ? [0.8, 1, 0.8] : 1
-                        }}
-                        transition={{
-                          duration: user.status === 'online' ? 1.5 : 0,
-                          repeat: user.status === 'online' ? Infinity : 0
-                        }}
-                      />
-                    </div>
-                    <div className="ml-3 min-w-0">
-                      <h3 className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
-                        {user.name}
+                        onClick={() => dispatch(setCurrentChat(user))}
+                        whileHover={{ scale: 1.01 }}
+                      >
+                        <div className="relative flex-shrink-0">
+                          <motion.img
+                            src={user?.picture || "https://i.pravatar.cc/150?img=1"}
+                            alt={user.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                            whileHover={{ scale: 1.1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                          />
+                          <motion.span
+                            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-950 ${
+                              user.status === 'online'
+                                ? 'bg-green-500'
+                                : user.status === 'away'
+                                ? 'bg-yellow-500'
+                                : 'bg-gray-400'
+                            }`}
+                            animate={{
+                              scale: [1, 1.2, 1],
+                              opacity: user.status === 'online' ? [0.8, 1, 0.8] : 1
+                            }}
+                            transition={{
+                              duration: user.status === 'online' ? 1.5 : 0,
+                              repeat: user.status === 'online' ? Infinity : 0
+                            }}
+                          />
+                        </div>
+                        <div className="ml-3 min-w-0">
+                          <h3 className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
+                            {user.name}
+                          </h3>
+                          <p className="text-xs truncate text-gray-500 dark:text-gray-400">
+                            {user.status === 'online'
+                              ? 'Online'
+                              : user.status === 'away'
+                              ? 'Away'
+                              : 'Offline'}
+                          </p>
+                        </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex flex-col items-center justify-center h-full p-6 text-center"
+                    >
+                      <div className="p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-3">
+                        <MessageSquare className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        No contacts found
                       </h3>
-                      <p className="text-xs truncate text-gray-500 dark:text-gray-400">
-                        {user.status === 'online'
-                          ? 'Online'
-                          : user.status === 'away'
-                          ? 'Away'
-                          : 'Offline'}
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {searchQuery ? 'Try a different search' : 'Add new contacts to get started'}
                       </p>
-                    </div>
-                  </motion.div>
-                ))
-              ) : (
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              )}
+              
+              {activeTab !== 'chats' && activeTab !== 'invitations' && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="flex flex-col items-center justify-center h-full p-6 text-center"
                 >
-                  <div className="p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-3">
-                    <MessageSquare className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-                  </div>
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.05, 1],
+                      opacity: [0.9, 1, 0.9]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-3"
+                  >
+                    {activeTab === 'video' ? (
+                      <Video className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                    ) : (
+                      <Phone className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                    )}
+                  </motion.div>
                   <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    No contacts found
+                    {activeTab === 'video' ? 'Video Calls' : 'Voice Calls'}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {searchQuery ? 'Try a different search' : 'Add new contacts to get started'}
+                    Your {activeTab === 'video' ? 'video' : 'voice'} call history will appear here
                   </p>
                 </motion.div>
               )}
-            </AnimatePresence>
-          )}
-          
-          {activeTab !== 'chats' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center h-full p-6 text-center"
-            >
-              <motion.div
-                animate={{
-                  scale: [1, 1.05, 1],
-                  opacity: [0.9, 1, 0.9]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-3"
-              >
-                {activeTab === 'video' ? (
-                  <Video className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-                ) : (
-                  <Phone className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-                )}
-              </motion.div>
-              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {activeTab === 'video' ? 'Video Calls' : 'Voice Calls'}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Your {activeTab === 'video' ? 'video' : 'voice'} call history will appear here
-              </p>
-            </motion.div>
+            </>
           )}
         </div>
         

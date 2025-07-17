@@ -36,6 +36,37 @@ const intitSocketSever = (server) => {
       onlineUsers.set(userId, socket.id);
 
       // 🔑 Properly attach socket listeners here:
+      // --- Video Call Signaling Events ---
+      socket.on("offer", ({ toUserId, fromUserId, offer }) => {
+        const targetSocketId = onlineUsers.get(toUserId);
+        console.log("tousedId", toUserId);
+        console.log("targeted socket id", targetSocketId);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit("offer", { offer, fromUserId });
+        }
+      });
+
+      socket.on("answer", ({ toUserId, fromUserId, answer }) => {
+        const targetSocketId = onlineUsers.get(toUserId);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit("answer", { answer, fromUserId });
+        }
+      });
+
+      socket.on("ice-candidate", ({ toUserId, fromUserId, candidate }) => {
+        const targetSocketId = onlineUsers.get(toUserId);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit("ice-candidate", { candidate, fromUserId });
+        }
+      });
+
+      socket.on("end-call", ({ toUserId, fromUserId }) => {
+        const targetSocketId = onlineUsers.get(toUserId);
+        if (targetSocketId) {
+          io.to(targetSocketId).emit("call-ended", { fromUserId });
+        }
+      });
+
       socket.on("join_group", (groupName) => {
         console.log(`User ${userId} joined group ${groupName}`);
         socket.join(groupName);

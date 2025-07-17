@@ -12,14 +12,17 @@ import {
 } from "../../features/chat/chatSlice";
 import { baseUrl } from "../../utils/constants";
 import ChatBoard from "../auth/ChatBoard";
+import { useSocket } from "../../context/SocketContext";
+import { useNavigate } from "react-router-dom";
 
 const ChatArea = () => {
+  const {startCall} = useSocket()
   const { currentChat } = useSelector(useContact);
   const [newMessage, setNewMessage] = useState({});
   const { messages } = useSelector(useChat);
   const [currentMessage, setCurrentMessage] = useState("");
   const typingTimeoutRef = useRef();
-
+  const navigate = useNavigate()
 
   console.log(messages);
   
@@ -136,7 +139,11 @@ useEffect(() => {
               <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                 <Phone className="h-5 w-5 text-gray-500 dark:text-gray-300" />
               </button>
-              <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+              <button type="button" onClick={()=>{
+                startCall(currentChat._id , localStorage.getItem("userId")),
+                navigate("/video")
+                
+              }}  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                 <Video className="h-5 w-5 text-gray-500 dark:text-gray-300" />
               </button>
               <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition">

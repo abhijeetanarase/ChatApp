@@ -133,5 +133,34 @@ const checkAuth = async (req, res) => {
   }
 };
 
-export { getAllContacts, addToConatct, searchUsers , getProfile , checkAuth};
+const respondToInvitation = async (req, res) => {
+  const { contactId } = req.params;
+  const { action } = req.body; // "accepted" या "rejected"
+  try {
+    const contact = await Contact.findById(contactId);
+    if (!contact) return res.status(404).json({ message: "Invitation not found" });
+    if (contact.recipient.toString() !== req.userId) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    contact.status = action;
+    await contact.save();
+    res.status(200).json({ success: true, contact });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const getPendingInvitations = async (req, res) => {
+  try {
+    const invitations = await Contact.find({
+      recipient: req.userId,
+      status: "pending"
+    }).populate("requester");
+    res.status(200).json({ invitations });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export { getAllContacts, addToConatct, searchUsers , getProfile , checkAuth, getPendingInvitations, respondToInvitation };
 
